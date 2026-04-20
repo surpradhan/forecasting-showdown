@@ -1,0 +1,3 @@
+model: arima
+order: [1, 1, 1]       # (p, d, q)
+seasonal_order: [1, 1, 1, 24]  # (P, D, Q, s) for SARIMA

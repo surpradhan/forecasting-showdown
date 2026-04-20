@@ -1,0 +1,42 @@
+[project]
+name = "forecasting-showdown"
+version = "0.1.0"
+requires-python = ">=3.11"
+dependencies = [
+    "numpy",
+    "pandas",
+    "scikit-learn",
+    "pyyaml",
+    "mlflow",
+    "statsmodels",
+    "prophet",
+    "xgboost",
+    "lightgbm",
+    "torch",
+    "matplotlib",
+    "seaborn",
+]
+
+[dependency-groups]
+dev = ["pytest", "pytest-cov", "jupyter", "ipykernel"]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+markers = [
+    "deep: tests that import PyTorch — run separately to avoid OpenMP conflict with XGBoost on macOS",
+]
+# PyTorch and XGBoost both bundle libomp and segfault when loaded in the same
+# process on macOS ARM. Ignoring test_base_seq.py (not just deselecting) prevents
+# pytest from importing torch during the default run.
+# Prophet's cmdstanpy runtime has the same conflict with XGBoost/LightGBM libomp.
+# Deep tests:   uv run pytest tests/test_base_seq.py tests/test_models_week3.py --override-ini="addopts="
+# Prophet tests: uv run pytest tests/test_models_week4.py --override-ini="addopts="
+# run_all tests: uv run pytest tests/test_run_all.py --override-ini="addopts="
+addopts = "--ignore=tests/test_base_seq.py --ignore=tests/test_models_week3.py --ignore=tests/test_models_week4.py --ignore=tests/test_run_all.py"

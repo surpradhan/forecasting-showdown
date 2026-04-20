@@ -1,0 +1,4 @@
+horizon: 24          # steps ahead to forecast
+eval_window: 168     # rolling eval window (one week of hourly data)
+target_col: demand
+date_col: timestamp

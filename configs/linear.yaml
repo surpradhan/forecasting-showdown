@@ -1,0 +1,2 @@
+model: linear
+alpha: 1.0   # ridge regularization strength

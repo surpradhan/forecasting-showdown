@@ -1,0 +1,7 @@
+model: ensemble
+# Top-3 tabular models by MAE from the Week 4 benchmark run.
+# Each member is fit independently using its own configs/<name>.yaml.
+members: [lgbm, xgboost, random_forest]
+strategy: mean
+# strategy: weighted
+# weights: [0.4, 0.35, 0.25]   # uncomment to try a weighted blend

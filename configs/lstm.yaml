@@ -1,0 +1,11 @@
+model: lstm
+hidden_size: 64
+num_layers: 2
+dropout: 0.2
+seq_len: 168     # lookback window (one week)
+batch_size: 64
+# epochs: on Apple Silicon, MPS Metal shader compilation dominates training time
+# (~2-7 min fixed cost per model type, regardless of epoch count). 20 is a reasonable
+# default; increase for final training runs once shaders are cached.
+epochs: 20
+lr: 0.001

@@ -1,0 +1,7 @@
+model: prophet
+yearly_seasonality: true
+weekly_seasonality: true
+daily_seasonality: true
+changepoint_prior_scale: 0.05
+# Note: tests disable yearly_seasonality for speed (Stan compilation is slow).
+# This production config keeps it enabled for the full benchmark run.

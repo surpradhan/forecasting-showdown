@@ -1,0 +1,9 @@
+model: gru
+hidden_size: 64
+num_layers: 2
+dropout: 0.2
+seq_len: 168     # lookback window (one week)
+batch_size: 64
+# epochs: see lstm.yaml for note on MPS Metal shader compilation overhead.
+epochs: 20
+lr: 0.001

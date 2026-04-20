@@ -1,0 +1,11 @@
+model: transformer
+d_model: 64
+nhead: 4
+num_encoder_layers: 2
+dim_feedforward: 256
+dropout: 0.1
+seq_len: 168     # lookback window (one week)
+batch_size: 64
+# epochs: see lstm.yaml for note on MPS Metal shader compilation overhead.
+epochs: 20
+lr: 0.0005

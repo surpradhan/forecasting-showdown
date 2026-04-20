@@ -1,0 +1,3 @@
+model: naive
+strategy: seasonal   # "last" or "seasonal"
+seasonal_period: 24  # 24h for hourly data
