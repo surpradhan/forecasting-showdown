@@ -1,0 +1,635 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Forecasting Showdown</title>
+  <style>
+    /* ── Reset & base ───────────────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --blue:    #0072B2;
+      --orange:  #E69F00;
+      --teal:    #009E73;
+      --text:    #1a1a2e;
+      --muted:   #555577;
+      --border:  #d8d8e8;
+      --bg:      #f8f8fc;
+      --white:   #ffffff;
+      --radius:  8px;
+      --shadow:  0 2px 12px rgba(0,0,0,.08);
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      color: var(--text);
+      background: var(--bg);
+      line-height: 1.6;
+    }
+
+    a { color: var(--blue); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    /* ── Layout helpers ─────────────────────────────────────────── */
+    .container { max-width: 960px; margin: 0 auto; padding: 0 24px; }
+
+    section { padding: 64px 0; }
+    section:nth-child(even) { background: var(--white); }
+
+    h2 {
+      font-size: 1.6rem;
+      font-weight: 700;
+      margin-bottom: 28px;
+      color: var(--text);
+    }
+
+    h3 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin-bottom: 8px;
+    }
+
+    p { margin-bottom: 14px; color: var(--muted); }
+
+    /* ── Hero ───────────────────────────────────────────────────── */
+    .hero {
+      background: linear-gradient(135deg, #0a0a2e 0%, #0f2460 60%, #0072B2 100%);
+      color: var(--white);
+      padding: 88px 0 72px;
+      text-align: center;
+    }
+
+    .hero h1 {
+      font-size: clamp(2rem, 5vw, 3.2rem);
+      font-weight: 800;
+      letter-spacing: -0.5px;
+      margin-bottom: 16px;
+    }
+
+    .hero .subtitle {
+      font-size: 1.1rem;
+      opacity: .85;
+      max-width: 620px;
+      margin: 0 auto 36px;
+      color: var(--white);
+    }
+
+    /* Stat pills */
+    .stats {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 16px;
+      margin-top: 8px;
+    }
+
+    .stat {
+      background: rgba(255,255,255,.12);
+      border: 1px solid rgba(255,255,255,.22);
+      border-radius: 100px;
+      padding: 10px 24px;
+      font-size: .9rem;
+    }
+
+    .stat strong { font-size: 1.3rem; display: block; }
+
+    /* ── Badges ─────────────────────────────────────────────────── */
+    .badges {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      justify-content: center;
+      margin-top: 28px;
+    }
+
+    .badge {
+      background: rgba(255,255,255,.18);
+      border: 1px solid rgba(255,255,255,.3);
+      border-radius: 6px;
+      padding: 4px 12px;
+      font-size: .78rem;
+      letter-spacing: .4px;
+      text-transform: uppercase;
+    }
+
+    /* ── Results table ──────────────────────────────────────────── */
+    .table-wrap { overflow-x: auto; border-radius: var(--radius); box-shadow: var(--shadow); }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: .9rem;
+      background: var(--white);
+    }
+
+    thead tr { background: var(--blue); color: var(--white); }
+    thead th { padding: 12px 16px; text-align: left; font-weight: 600; white-space: nowrap; }
+
+    tbody tr { border-bottom: 1px solid var(--border); transition: background .15s; }
+    tbody tr:hover { background: #f0f4ff; }
+    tbody td { padding: 11px 16px; white-space: nowrap; }
+
+    .rank { font-weight: 700; color: var(--muted); }
+    .model-name { font-weight: 600; }
+
+    /* Family colour dots */
+    .dot {
+      display: inline-block;
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      margin-right: 6px;
+      vertical-align: middle;
+    }
+    .dot-tabular    { background: var(--blue); }
+    .dot-deep       { background: var(--orange); }
+    .dot-univariate { background: var(--teal); }
+
+    .best-row { background: #eaf3ff; }
+    .best-row td:nth-child(3) { color: var(--blue); font-weight: 700; }
+
+    /* ── Legend pills ───────────────────────────────────────────── */
+    .legend {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: .85rem;
+      color: var(--muted);
+    }
+
+    .legend-swatch {
+      width: 14px; height: 14px;
+      border-radius: 3px;
+    }
+
+    /* ── Charts ─────────────────────────────────────────────────── */
+    .charts-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(420px, 1fr));
+      gap: 32px;
+    }
+
+    .chart-card {
+      background: var(--white);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+
+    .chart-card img {
+      width: 100%;
+      display: block;
+    }
+
+    .chart-caption {
+      padding: 14px 18px;
+      font-size: .85rem;
+      color: var(--muted);
+      border-top: 1px solid var(--border);
+    }
+
+    .chart-caption strong { color: var(--text); }
+
+    /* ── Findings ───────────────────────────────────────────────── */
+    .findings-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 20px;
+    }
+
+    .finding-card {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 22px 24px;
+    }
+
+    .finding-card .num {
+      font-size: 2rem;
+      font-weight: 800;
+      color: var(--blue);
+      line-height: 1;
+      margin-bottom: 8px;
+      opacity: .3;
+    }
+
+    /* ── Setup ──────────────────────────────────────────────────── */
+    pre {
+      background: #1a1a2e;
+      color: #e0e0f0;
+      border-radius: var(--radius);
+      padding: 20px 24px;
+      font-size: .85rem;
+      overflow-x: auto;
+      line-height: 1.7;
+      margin-bottom: 20px;
+    }
+
+    code { font-family: "SF Mono", "Fira Code", Consolas, monospace; }
+
+    .inline-code {
+      background: #ececf8;
+      color: #2a2a5a;
+      padding: 1px 6px;
+      border-radius: 4px;
+      font-family: "SF Mono", "Fira Code", Consolas, monospace;
+      font-size: .88em;
+    }
+
+    /* ── Models section ─────────────────────────────────────────── */
+    .models-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 16px;
+    }
+
+    .model-card {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-left: 4px solid var(--blue);
+      border-radius: var(--radius);
+      padding: 18px 20px;
+    }
+
+    .model-card.deep   { border-left-color: var(--orange); }
+    .model-card.univariate { border-left-color: var(--teal); }
+
+    .model-card .metrics {
+      display: flex;
+      gap: 16px;
+      margin-top: 8px;
+    }
+
+    .model-card .metric-val {
+      font-size: .8rem;
+      color: var(--muted);
+    }
+
+    .model-card .metric-val strong { color: var(--text); font-size: .92rem; }
+
+    /* ── Footer ─────────────────────────────────────────────────── */
+    footer {
+      background: #1a1a2e;
+      color: rgba(255,255,255,.6);
+      text-align: center;
+      padding: 32px 24px;
+      font-size: .85rem;
+    }
+
+    footer a { color: rgba(255,255,255,.8); }
+
+    /* ── Responsive ─────────────────────────────────────────────── */
+    @media (max-width: 600px) {
+      .charts-grid { grid-template-columns: 1fr; }
+      .hero { padding: 56px 0 48px; }
+      section { padding: 44px 0; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════════════════════════════ HERO -->
+<header class="hero">
+  <div class="container">
+    <h1>Forecasting Showdown</h1>
+    <p class="subtitle">
+      A rigorous benchmark of 11 time-series forecasting models on hourly energy demand —
+      from a seasonal naive baseline to gradient-boosted trees, deep recurrent networks, and a stacking ensemble.
+    </p>
+
+    <div class="stats">
+      <div class="stat"><strong>11</strong> models compared</div>
+      <div class="stat"><strong>34 168</strong> hourly observations</div>
+      <div class="stat"><strong>MAE 0.316</strong> best result (ensemble)</div>
+      <div class="stat"><strong>5 orders</strong> of magnitude in train time</div>
+    </div>
+
+    <div class="badges">
+      <span class="badge">Python 3.11</span>
+      <span class="badge">uv</span>
+      <span class="badge">LightGBM</span>
+      <span class="badge">XGBoost</span>
+      <span class="badge">PyTorch</span>
+      <span class="badge">Prophet</span>
+      <span class="badge">MLflow</span>
+      <span class="badge">UCI Energy Dataset</span>
+    </div>
+  </div>
+</header>
+
+<!-- ═══════════════════════════════════════════════════════════════ RESULTS TABLE -->
+<section id="results">
+  <div class="container">
+    <h2>Results</h2>
+    <p>Chronological 80/10/10 split — test window Jun–Nov 2010 (3 400 rows).</p>
+
+    <div class="legend">
+      <span class="legend-item"><span class="legend-swatch" style="background:#0072B2"></span>Tabular</span>
+      <span class="legend-item"><span class="legend-swatch" style="background:#E69F00"></span>Deep Learning</span>
+      <span class="legend-item"><span class="legend-swatch" style="background:#009E73"></span>Univariate / Classical</span>
+    </div>
+
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Model</th>
+            <th>MAE ↓</th>
+            <th>RMSE ↓</th>
+            <th>MAPE ↓</th>
+            <th>SMAPE ↓</th>
+            <th>Train (s)</th>
+            <th>Latency (s)</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr class="best-row">
+            <td class="rank">1</td>
+            <td class="model-name"><span class="dot dot-tabular"></span>ensemble</td>
+            <td><strong>0.3157</strong></td><td>0.4595</td><td>43.85</td><td>34.80</td><td>4.0</td><td>0.039</td>
+          </tr>
+          <tr>
+            <td class="rank">2</td>
+            <td class="model-name"><span class="dot dot-tabular"></span>lgbm</td>
+            <td>0.3165</td><td>0.4609</td><td>43.68</td><td>34.82</td><td>0.9</td><td>0.006</td>
+          </tr>
+          <tr>
+            <td class="rank">3</td>
+            <td class="model-name"><span class="dot dot-tabular"></span>xgboost</td>
+            <td>0.3173</td><td>0.4610</td><td>43.93</td><td>35.09</td><td>0.4</td><td>0.004</td>
+          </tr>
+          <tr>
+            <td class="rank">4</td>
+            <td class="model-name"><span class="dot dot-tabular"></span>random_forest</td>
+            <td>0.3196</td><td>0.4655</td><td>44.71</td><td>35.04</td><td>2.7</td><td>0.027</td>
+          </tr>
+          <tr>
+            <td class="rank">5</td>
+            <td class="model-name"><span class="dot dot-tabular"></span>linear</td>
+            <td>0.3541</td><td>0.5040</td><td>49.50</td><td>39.18</td><td>0.004</td><td>0.001</td>
+          </tr>
+          <tr>
+            <td class="rank">6</td>
+            <td class="model-name"><span class="dot dot-deep"></span>gru</td>
+            <td>0.4371</td><td>0.5988</td><td>69.30</td><td>46.99</td><td>1&nbsp;788</td><td>0.427</td>
+          </tr>
+          <tr>
+            <td class="rank">7</td>
+            <td class="model-name"><span class="dot dot-deep"></span>lstm</td>
+            <td>0.4449</td><td>0.5886</td><td>76.20</td><td>49.04</td><td>170</td><td>0.643</td>
+          </tr>
+          <tr>
+            <td class="rank">8</td>
+            <td class="model-name"><span class="dot dot-univariate"></span>prophet</td>
+            <td>0.4890</td><td>0.6405</td><td>79.85</td><td>61.92</td><td>2.9</td><td>0.455</td>
+          </tr>
+          <tr>
+            <td class="rank">9</td>
+            <td class="model-name"><span class="dot dot-deep"></span>transformer</td>
+            <td>0.5911</td><td>0.7503</td><td>107.46</td><td>58.53</td><td>423</td><td>1.910</td>
+          </tr>
+          <tr>
+            <td class="rank">10</td>
+            <td class="model-name"><span class="dot dot-univariate"></span>naive</td>
+            <td>0.7792</td><td>1.0287</td><td>148.43</td><td>65.45</td><td>0.001</td><td>0.005</td>
+          </tr>
+          <tr>
+            <td class="rank">11</td>
+            <td class="model-name"><span class="dot dot-univariate"></span>arima</td>
+            <td>1.1722</td><td>1.3277</td><td>245.89</td><td>89.28</td><td>72.9</td><td>0.145</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════════ CHARTS -->
+<section id="charts">
+  <div class="container">
+    <h2>Charts</h2>
+
+    <div class="charts-grid">
+      <div class="chart-card">
+        <img src="assets/mae_bar.png" alt="MAE by model" />
+        <p class="chart-caption"><strong>MAE by model.</strong> Tabular models cluster at 0.316–0.354; deep learning and classical models trail by a wide margin.</p>
+      </div>
+
+      <div class="chart-card">
+        <img src="assets/train_time_scatter.png" alt="Accuracy vs training cost" />
+        <p class="chart-caption"><strong>Accuracy vs training cost.</strong> Log-scale x-axis. Tabular models hold the bottom-left — best accuracy, fastest to train.</p>
+      </div>
+
+      <div class="chart-card">
+        <img src="assets/metrics_grid.png" alt="All four error metrics" />
+        <p class="chart-caption"><strong>All error metrics.</strong> Rankings hold across MAE, RMSE, and SMAPE. MAPE is the exception — LSTM inflates on low-demand hours.</p>
+      </div>
+
+      <div class="chart-card">
+        <img src="assets/forecast_overlay.png" alt="Forecast vs actuals — first week of test set" />
+        <p class="chart-caption"><strong>Forecast overlay — first week of test set.</strong> Ensemble and LightGBM track the daily double-peak closely; naive drifts on atypical days.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════════ KEY FINDINGS -->
+<section id="findings">
+  <div class="container">
+    <h2>Key Findings</h2>
+
+    <div class="findings-grid">
+      <div class="finding-card">
+        <div class="num">01</div>
+        <h3>Tabular models dominate</h3>
+        <p>Gradient-boosted trees beat every deep learning model — lag, rolling, and calendar features are sufficient for hourly demand.</p>
+      </div>
+
+      <div class="finding-card">
+        <div class="num">02</div>
+        <h3>Features beat architecture</h3>
+        <p>Ridge regression (12 features, &lt; 1 ms) reaches MAE 0.354 — ahead of every deep model.</p>
+      </div>
+
+      <div class="finding-card">
+        <div class="num">03</div>
+        <h3>Deep learning is expensive here</h3>
+        <p>GRU and LSTM spend 170–1 788 s training to land 38–40% behind LightGBM.</p>
+      </div>
+
+      <div class="finding-card">
+        <div class="num">04</div>
+        <h3>Ensemble gain is marginal</h3>
+        <p>Averaging the top-3 tabular models improves MAE by 0.3% over solo LightGBM — probably not worth the 4× training cost.</p>
+      </div>
+
+      <div class="finding-card">
+        <div class="num">05</div>
+        <h3>Chronological splits matter</h3>
+        <p>All scores use strict time-ordered splits. Shuffling would leak future data and inflate every number.</p>
+      </div>
+
+      <div class="finding-card">
+        <div class="num">06</div>
+        <h3>Univariate models need features too</h3>
+        <p>ARIMA ranks last at MAE 1.17 on the raw series. Prophet's seasonality decomposition closes much of the gap (MAE 0.489).</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════════ MODELS -->
+<section id="models">
+  <div class="container">
+    <h2>Models at a Glance</h2>
+
+    <div class="models-grid">
+      <div class="model-card tabular">
+        <h3><span class="dot dot-tabular"></span>Ensemble</h3>
+        <p>Mean of LightGBM + XGBoost + Random Forest.</p>
+        <div class="metrics">
+          <div class="metric-val"><strong>MAE 0.316</strong></div>
+          <div class="metric-val">Train 4.0 s</div>
+        </div>
+      </div>
+
+      <div class="model-card tabular">
+        <h3><span class="dot dot-tabular"></span>LightGBM</h3>
+        <p>Best solo model. Sub-second training, SHAP support.</p>
+        <div class="metrics">
+          <div class="metric-val"><strong>MAE 0.317</strong></div>
+          <div class="metric-val">Train 0.9 s</div>
+        </div>
+      </div>
+
+      <div class="model-card tabular">
+        <h3><span class="dot dot-tabular"></span>XGBoost</h3>
+        <p>Same accuracy as LightGBM at 2.5× less training time.</p>
+        <div class="metrics">
+          <div class="metric-val"><strong>MAE 0.317</strong></div>
+          <div class="metric-val">Train 0.4 s</div>
+        </div>
+      </div>
+
+      <div class="model-card tabular">
+        <h3><span class="dot dot-tabular"></span>Random Forest</h3>
+        <p>100 trees averaged. Slightly higher variance than boosted models.</p>
+        <div class="metrics">
+          <div class="metric-val"><strong>MAE 0.320</strong></div>
+          <div class="metric-val">Train 2.7 s</div>
+        </div>
+      </div>
+
+      <div class="model-card tabular">
+        <h3><span class="dot dot-tabular"></span>Linear / Ridge</h3>
+        <p>12 engineered features. Fastest to train; beats every deep model.</p>
+        <div class="metrics">
+          <div class="metric-val"><strong>MAE 0.354</strong></div>
+          <div class="metric-val">Train &lt; 1 ms</div>
+        </div>
+      </div>
+
+      <div class="model-card deep">
+        <h3><span class="dot dot-deep"></span>GRU</h3>
+        <p>Best deep model. High training cost dominated by one-time shader compilation.</p>
+        <div class="metrics">
+          <div class="metric-val"><strong>MAE 0.437</strong></div>
+          <div class="metric-val">Train 1 788 s</div>
+        </div>
+      </div>
+
+      <div class="model-card deep">
+        <h3><span class="dot dot-deep"></span>LSTM</h3>
+        <p>Two-layer recurrent network. Sequence modelling adds little over lag features here.</p>
+        <div class="metrics">
+          <div class="metric-val"><strong>MAE 0.445</strong></div>
+          <div class="metric-val">Train 170 s</div>
+        </div>
+      </div>
+
+      <div class="model-card univariate">
+        <h3><span class="dot dot-univariate"></span>Prophet</h3>
+        <p>Trend + seasonality decomposition. Built-in uncertainty intervals.</p>
+        <div class="metrics">
+          <div class="metric-val"><strong>MAE 0.489</strong></div>
+          <div class="metric-val">Train 2.9 s</div>
+        </div>
+      </div>
+
+      <div class="model-card deep">
+        <h3><span class="dot dot-deep"></span>Transformer</h3>
+        <p>Encoder-only architecture. Underperforms without a task-specific design.</p>
+        <div class="metrics">
+          <div class="metric-val"><strong>MAE 0.591</strong></div>
+          <div class="metric-val">Train 423 s</div>
+        </div>
+      </div>
+
+      <div class="model-card univariate">
+        <h3><span class="dot dot-univariate"></span>Naive (Seasonal)</h3>
+        <p>Repeats the value from 24 hours prior. Zero parameters.</p>
+        <div class="metrics">
+          <div class="metric-val"><strong>MAE 0.779</strong></div>
+          <div class="metric-val">Train &lt; 1 ms</div>
+        </div>
+      </div>
+
+      <div class="model-card univariate">
+        <h3><span class="dot dot-univariate"></span>ARIMA</h3>
+        <p>Raw series only — no calendar or lag features. Last place.</p>
+        <div class="metrics">
+          <div class="metric-val"><strong>MAE 1.172</strong></div>
+          <div class="metric-val">Train 72.9 s</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════════ SETUP -->
+<section id="setup">
+  <div class="container">
+    <h2>Quick Start</h2>
+    <p>Requires <a href="https://docs.astral.sh/uv/" target="_blank" rel="noopener">uv</a>. Dataset: <a href="https://archive.ics.uci.edu/dataset/235/individual+household+electric+power+consumption" target="_blank" rel="noopener">UCI Household Power Consumption</a> at <span class="inline-code">data/energy.csv</span>.</p>
+
+    <pre><code>git clone https://github.com/surabhi7pradhan/forecasting-showdown
+cd forecasting-showdown
+uv sync --group dev</code></pre>
+
+    <pre><code># Run all 11 models
+uv run python scripts/run_all.py
+
+# Single model or group
+uv run python scripts/run_all.py --model lgbm
+uv run python scripts/run_all.py --group tabular
+
+# Browse results
+uv run python -m mlflow ui
+uv run jupyter notebook</code></pre>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════════ FOOTER -->
+<footer>
+  <div class="container">
+    <p>
+      <a href="https://github.com/surabhi7pradhan/forecasting-showdown" target="_blank" rel="noopener">GitHub Repository</a>
+      &nbsp;·&nbsp;
+      <a href="https://github.com/surabhi7pradhan/forecasting-showdown/blob/main/reports/report.md" target="_blank" rel="noopener">Full Report</a>
+      &nbsp;·&nbsp;
+      Dataset: <a href="https://archive.ics.uci.edu/dataset/235/individual+household+electric+power+consumption" target="_blank" rel="noopener">UCI ML Repository</a>
+    </p>
+    <p style="margin-top:8px; opacity:.5;">Built with Python · uv · MLflow · matplotlib</p>
+  </div>
+</footer>
+
+</body>
+</html>

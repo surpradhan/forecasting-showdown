@@ -39,6 +39,22 @@ mlflow.db
 
 # Claude Code local settings
 .claude/
+CLAUDE_CONFIG.yaml
+CLAUDE_SECRETS.yaml
+CLAUDE_LOGS/
+CLAUDE_CACHE/
+CLAUDE_TEMP/
+CLAUDE_OUTPUT/
+CLAUDE_BACKUP/
+CLAUDE_TEST/
+CLAUDE_SNAPSHOTS/
+CLAUDE_PROFILES/
+CLAUDE_ENVIRONMENTS/
+CLAUDE_SESSIONS/
+CLAUDE_HISTORY/
+CLAUDE_DEBUG/
+CLAUDE_EXPERIMENTS/
+CLAUDE.md
 
 # Personal planning docs
 forecasting_showdown_blueprint.pdf
@@ -46,3 +62,6 @@ forecasting_showdown_blueprint.pdf
 # Results cache (figures are committed via reports/figures/)
 results/
 !results/.gitkeep
+
+#gitignore
+.gitignore
